@@ -6,11 +6,13 @@ import bcrypt from 'bcrypt';
 import { PointerStrategy } from 'sso-pointer';
 import dotenv from 'dotenv';
 import { Supplier } from '../models/NhaCungCap.js';
-
+import { User } from '../models/User.js';
 dotenv.config();
 
 const router = express.Router();
-const pointer = new PointerStrategy(process.env.POINTER_API_KEY);
+const pointer = new PointerStrategy({clientId : process.env.POINTER_CLIENT_ID,
+    clientSecret : process.env.POINTER_CLIENT_SECRET
+});
 
 // Hàm xác thực token chung
 const verifyToken = (req, res, next) => {
@@ -64,7 +66,7 @@ router.post('/login', async (req, res) => {
         }
 
         // Kiểm tra nếu là user
-        const user = await Supplier.findOne({ username });
+        const user = await User.findOne({ username });
         if (user) {
             const validPassword = await bcrypt.compare(password, user.password);
             if (!validPassword) {
@@ -116,13 +118,13 @@ router.get('/callback', async (req, res) => {
       }
 
       // Kiểm tra xem người dùng đã tồn tại trong database chưa
-      let user = await Supplier.findOne({ _id: userId });
+      let user = await User.findOne({ _id: userId });
 
       if (!user) {
           // Tạo một username từ email nếu không có username
           const generatedUsername = email.split('@')[0]; // Lấy phần trước @ của email làm username
 
-          const newUser = new Supplier({
+          const newUser = new User({
               _id: userId,
               email,
               username: generatedUsername, // Sử dụng email làm username
@@ -140,7 +142,7 @@ router.get('/callback', async (req, res) => {
       return res.json({ login: true, role: 'ncc', username: user.username, userId: user._id, token });
   } catch (error) {
       console.error('Error in callback:', error.message); // Log lỗi
-      return res.status(500).json({ message: 'Lỗi máy chủ', error: error.message });
+      return res.status(500).json({ message: 'Lỗi máy chủ', error: error.message, error: error.message, stack: error.stack });
   }
 });
 

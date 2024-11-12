@@ -16,6 +16,7 @@ const cartSchema = new mongoose.Schema({
     required: true,
     min: 1
   }
+  // thêm status 5 trạng thái 
 });
 
 export const Cart = mongoose.model('Cart', cartSchema);

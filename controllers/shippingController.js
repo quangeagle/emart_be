@@ -35,7 +35,7 @@ const createShipping = async (req, res) => {
       note,
       orderItems
     });
-
+// thêm trạng thái 
     await newShipping.save();
     res.status(201).json(newShipping);
   } catch (error) {
