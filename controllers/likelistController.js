@@ -1,5 +1,5 @@
 
-import { Likelist } from '../models/likelist.js';
+import { Likelist } from '../models/Likelist.js';
 import { Product } from '../models/Product.js'; // Sử dụng tên đúng là 'Product'
 import { User } from '../models/User.js';
 
