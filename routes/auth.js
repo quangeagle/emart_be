@@ -2,10 +2,11 @@ import express from 'express';
 import { Admin } from '../models/Admin.js';
 
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
+
 import { PointerStrategy } from 'sso-pointer';
 import dotenv from 'dotenv';
-import { Supplier } from '../models/NhaCungCap.js';
+
 import { User } from '../models/User.js';
 dotenv.config();
 
