@@ -36,21 +36,28 @@ const shippingSchema = new mongoose.Schema({
     enum: ['COD', 'CreditCard'],
     required: true
   },
+ 
   creditCardNumber: {
     type: String,
-    required: function() { return this.paymentMethod === 'CreditCard'; }
+    required: function() { return this.paymentMethod === 'CreditCard' && this.isNew; }
   },
   expiryDate: {
     type: String,
-    required: function() { return this.paymentMethod === 'CreditCard'; }
+    required: function() { return this.paymentMethod === 'CreditCard' && this.isNew; }
   },
   securityCode: {
     type: String,
-    required: function() { return this.paymentMethod === 'CreditCard'; }
+    required: function() { return this.paymentMethod === 'CreditCard' && this.isNew; }
   },
+  
   note: {
     type: String,
     default: ''
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'processing', 'paid', 'canceled'],
+    default: 'pending', 
   },
   orderItems: [{
     productId: {
@@ -64,10 +71,7 @@ const shippingSchema = new mongoose.Schema({
       min: 1
     }
   }],
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
-});
 
-export const Shipping = mongoose.model('Shipping', shippingSchema); // Sửa tên model
+}, { timestamps: true }); 
+
+export const Shipping = mongoose.model('Shipping', shippingSchema); 

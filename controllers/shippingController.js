@@ -16,7 +16,7 @@ const createShipping = async (req, res) => {
     expiryDate,
     securityCode,
     note,
-    orderItems
+    orderItems, 
   } = req.body;
 
   try {
@@ -33,9 +33,10 @@ const createShipping = async (req, res) => {
       expiryDate,
       securityCode,
       note,
-      orderItems
+      orderItems,
+      status: 'pending',
     });
-// thêm trạng thái 
+    console.log("New Shipping Object:", newShipping); // Kiểm tra trước khi lưu
     await newShipping.save();
     res.status(201).json(newShipping);
   } catch (error) {
@@ -53,5 +54,29 @@ const getAllShippingOrders = async (req, res) => {
   }
 };
 
+// Xử lý thanh toán
+const processPayment = async (req, res) => {
+  try {
+    const { orderID, status } = req.body;
+    const order = await Shipping.findById(orderID).populate('orderItems.productId');
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (status === 200) {
+      order.status = 'paid';
+      await order.save({ validateBeforeSave: false }); // Bỏ qua validation
+      res.status(200).json({ message: 'Payment successful', order });
+    } else {
+      res.status(400).json({ message: 'Payment failed' });
+    }
+  } catch (error) {
+    console.log("Error in processPayment", error.message);
+    res.status(500).json({ message: 'Error processing payment', error });
+  }
+};
+
+
 // Export các hàm để sử dụng ở các file khác
-export { createShipping, getAllShippingOrders };
+export { createShipping, getAllShippingOrders,processPayment };
