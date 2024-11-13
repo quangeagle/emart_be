@@ -1,5 +1,5 @@
 import express from 'express';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { Supplier } from '../models/NhaCungCap.js';
 import { User } from '../models/User.js';
 const router = express.Router();
