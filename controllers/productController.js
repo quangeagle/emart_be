@@ -3,24 +3,34 @@
 
 import { Product } from '../models/Product.js';
 import { Supplier } from '../models/NhaCungCap.js';
+import { category } from '../models/DanhMucSP.js';
+
 
 export const createProduct = async (req, res) => {
   try {
-    const { categoryId, name, description, price, imageUrl, unit, quantity, supplierId } = req.body;
+    const { categoryId, name, description, imageUrl, versions, supplierId } = req.body;
+
+    // Kiểm tra xem nhà cung cấp có tồn tại không
     const supplier = await Supplier.findById(supplierId);
     if (!supplier) {
-      return res.status(400).json({ message: 'Supplier có tồn tại.' });
+      return res.status(400).json({ message: 'Supplier không tồn tại.' });
     }
+
+    // Tìm danh mục và populate các unitOptions liên quan
+    const Category = await category.findById(categoryId).populate('unitOptions');
+    if (!Category) {
+      return res.status(400).json({ message: 'Category không tồn tại.' });
+    }
+
+    // Tạo sản phẩm mới với thông tin về nhà cung cấp và danh mục
     const newProduct = new Product({
       name,
       description,
-      price,
       imageUrl,
-      quantity,
-      unit,
       category: categoryId,
-      Supplier: supplierId,
-      status: 'pending'  // Đặt trạng thái là 'pending' khi sản phẩm được tạo
+      supplier: supplierId,
+      status: 'pending',
+      versions
     });
 
     const savedProduct = await newProduct.save();
@@ -29,6 +39,7 @@ export const createProduct = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 // Admin duyệt sản phẩm
 export const approveProduct = async (req, res) => {
@@ -108,23 +119,41 @@ export const deleteProduct = async (req, res) => {
   }
 };
 
-// Cập nhật thông tin sản phẩm
+
+
+
+
 export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { categoryId, supplierId, name, description, price, imageUrl, quantity, unit } = req.body;
+    const { categoryId, supplierId, name, description, imageUrl, versions } = req.body;
 
+    // Find the product by ID and update fields, set status to "pending"
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
-      { category: categoryId, supplier: supplierId, name, description, price, imageUrl, quantity, unit },
+      {
+        category: categoryId,
+        supplier: supplierId,
+        name,
+        description,
+        imageUrl,
+        versions,
+        status: "pending"
+      },
       { new: true }
     );
 
+    if (!updatedProduct) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
     res.json(updatedProduct);
   } catch (err) {
+    console.error("Error updating product:", err);
     res.status(500).json({ message: err.message });
   }
-}; 
+};
+
 // Lấy sản phẩm đang chờ duyệt
 export const getPendingProducts = async (req, res) => {
   try {
@@ -139,7 +168,7 @@ export const getProductsBySupplier = async (req, res) => {
   try {
     const { supplierId } = req.params; // Lấy supplierId từ params
 
-    const products = await Product.find({ Supplier: supplierId });
+    const products = await Product.find({ supplier: supplierId });
     
     if (!products.length) {
       return res.status(404).json({ message: 'Không có sản phẩm nào của nhà cung cấp này.' });
@@ -167,7 +196,7 @@ export const getSupplierProductStatistics = async (req, res) => {
 
     // Tổng hợp số lượng sản phẩm theo trạng thái cho nhà cung cấp
     const productCounts = await Product.aggregate([
-      { $match: { Supplier: supplierObjectId } }, // Đảm bảo sử dụng ObjectId hợp lệ cho Supplier
+      { $match: { supplier: supplierObjectId } }, // Đảm bảo sử dụng ObjectId hợp lệ cho Supplier
       {
         $group: {
           _id: '$status', // Nhóm theo trạng thái sản phẩm
@@ -259,7 +288,7 @@ export const getProductsBySupplierID = async (req, res) => {
     }
 
     // Truy vấn sản phẩm theo supplierId
-    const products = await Product.find({ Supplier: supplierId });
+    const products = await Product.find({ supplier: supplierId });
 
     if (products.length === 0) {
       return res.status(404).json({ message: 'No products found for this supplier.' });
@@ -269,5 +298,24 @@ export const getProductsBySupplierID = async (req, res) => {
   } catch (err) {
     console.error('Error fetching products:', err);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const calculateTotalQuantity = async (req, res) => {
+  try {
+    const products = await Product.find(); // Lấy tất cả sản phẩm
+
+    // Tính toán tổng số lượng cho mỗi sản phẩm và phiên bản
+    const totalQuantities = products.map(product => {
+      const totalQuantity = product.versions.reduce((acc, version) => {
+        // Tính tổng số lượng bằng cách nhân số lượng của phiên bản với số lượng trong một đơn vị
+        return acc + (version.unitQuantity * version.quantity);
+      }, 0);
+      return { productId: product._id, name: product.name, totalQuantity };
+    });
+
+    res.json(totalQuantities); // Trả về kết quả tổng hợp
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };

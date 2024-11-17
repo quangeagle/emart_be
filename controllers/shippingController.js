@@ -12,9 +12,7 @@ const createShipping = async (req, res) => {
     selectedDate,
     selectedTime,
     paymentMethod,
-    creditCardNumber,
-    expiryDate,
-    securityCode,
+   
     note,
     orderItems, 
   } = req.body;
@@ -29,9 +27,7 @@ const createShipping = async (req, res) => {
       selectedDate,
       selectedTime,
       paymentMethod,
-      creditCardNumber,
-      expiryDate,
-      securityCode,
+      
       note,
       orderItems,
       status: 'pending',
@@ -40,7 +36,8 @@ const createShipping = async (req, res) => {
     await newShipping.save();
     res.status(201).json(newShipping);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to create shipping record' });
+    console.error("Error in createShipping:", error); // Log lỗi chi tiết
+  res.status(500).json({ message: 'Failed to create shipping record', error: error.message });
   }
 };
 
@@ -77,6 +74,16 @@ const processPayment = async (req, res) => {
   }
 };
 
+const getShippingByUserId = async (req, res) => {
+  const { userId } = req.params; // Lấy userId từ params
 
+  try {
+    const orders = await Shipping.find({ userId });
+
+    res.status(200).json(orders);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to retrieve shipping orders for this user' });
+  }
+};
 // Export các hàm để sử dụng ở các file khác
-export { createShipping, getAllShippingOrders,processPayment };
+export { createShipping, getAllShippingOrders,processPayment,getShippingByUserId };
