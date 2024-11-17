@@ -6,14 +6,15 @@ import bcrypt from 'bcryptjs';
 
 import { PointerStrategy } from 'sso-pointer';
 import dotenv from 'dotenv';
-
+import { Supplier } from '../models/NhaCungCap.js';
 import { User } from '../models/User.js';
 dotenv.config();
 
 const router = express.Router();
-const pointer = new PointerStrategy({clientId : process.env.POINTER_CLIENT_ID,
-    clientSecret : process.env.POINTER_CLIENT_SECRET
-});
+const pointer = new PointerStrategy(
+    process.env.POINTER_CLIENT_ID,
+    process.env.POINTER_CLIENT_SECRET
+  );
 
 // Hàm xác thực token chung
 const verifyToken = (req, res, next) => {
@@ -41,7 +42,7 @@ const verifyToken = (req, res, next) => {
 
     // Lưu thông tin người dùng vào request
     req.userId = decoded.userId;
-    req.username = decoded.username;
+    req.email = decoded.email;
     req.role = decoded.role || 'user';
     
     // Tiếp tục với middleware tiếp theo
@@ -67,7 +68,7 @@ router.post('/login', async (req, res) => {
         }
 
         // Kiểm tra nếu là user
-        const user = await User.findOne({ username });
+        const user = await Supplier.findOne({ username });
         if (user) {
             const validPassword = await bcrypt.compare(password, user.password);
             if (!validPassword) {
@@ -112,23 +113,20 @@ router.get('/callback', async (req, res) => {
       const accessTokenData = await pointer.getAccessToken(code);
       console.log('Access Token Data:', accessTokenData);
 
-      const { id: userId, email } = accessTokenData;
+      const {user: { _id: userId, email } } = accessTokenData;
 
-      if (!userId || !email) {
-          return res.status(400).json({ message: 'User ID và email là bắt buộc' });
-      }
+     
 
       // Kiểm tra xem người dùng đã tồn tại trong database chưa
-      let user = await User.findOne({ _id: userId });
+      let user = await User.findOne({email });
 
       if (!user) {
-          // Tạo một username từ email nếu không có username
-          const generatedUsername = email.split('@')[0]; // Lấy phần trước @ của email làm username
+    
 
           const newUser = new User({
-              _id: userId,
+            _id: userId,
               email,
-              username: generatedUsername, // Sử dụng email làm username
+        
           });
           user = await newUser.save();
           console.log('Người dùng mới đã được tạo:', user);
@@ -139,8 +137,8 @@ router.get('/callback', async (req, res) => {
           console.log('Người dùng đã tồn tại và đã được cập nhật:', user);
       }
 
-      const token = jwt.sign({ username: user.username, role: 'ncc', userId: user._id }, process.env.USER_KEY, { expiresIn: '1h' });
-      return res.json({ login: true, role: 'ncc', username: user.username, userId: user._id, token });
+      const token = jwt.sign({ email:  user.email, role: 'ncc' , userId: user._id}, process.env.USER_KEY, { expiresIn: '1h' });
+      return res.json({ login: true, role: 'ncc', email:  user.email, userId: user._id, token });
   } catch (error) {
       console.error('Error in callback:', error.message); // Log lỗi
       return res.status(500).json({ message: 'Lỗi máy chủ', error: error.message, error: error.message, stack: error.stack });
@@ -149,9 +147,13 @@ router.get('/callback', async (req, res) => {
 
 // Route để xác minh người dùng
 router.get('/verify', verifyToken, (req, res) => {
-    return res.json({ login: true, role: req.role, username: req.username, userId: req.userId });
+    try {
+        return res.json({ login: true, role: req.role, email: req.email, userId: req.userId });
+    } catch (error) {
+        console.error('Error verifying token:', error);
+        return res.status(500).json({ message: 'Server error', error: error.message });
+    }
 });
-
 // Route để đăng xuất
 router.get('/logout', (req, res) => {
     res.clearCookie('token');
@@ -159,9 +161,6 @@ router.get('/logout', (req, res) => {
 });
 
 export { router as AdminRouter, verifyAdmin };
-
-
-
 
 
 // import express from 'express';

@@ -1,6 +1,6 @@
 import express from 'express';
 import { createProduct, getProductsByCategory, deleteProduct, updateProduct , getAllProducts,getProductById, approveProduct,
-    rejectProduct,getPendingProducts,getProductsBySupplier,getSupplierProductStatistics,getApprovedProducts,getProductsBySupplierID } from '../controllers/productController.js';
+    rejectProduct,getPendingProducts,getProductsBySupplier,getSupplierProductStatistics,getApprovedProducts,getProductsBySupplierID,calculateTotalQuantity } from '../controllers/productController.js';
 
 const router = express.Router();
 router.get('/choduyet', getPendingProducts);
@@ -16,4 +16,5 @@ router.get('/supplier/:supplierId', getProductsBySupplier);
 router.get('/:supplierId/statistics', getSupplierProductStatistics);
 router.get('/approved', getApprovedProducts);
 router.get('/products', getProductsBySupplierID);
+router.get('/totalQuantity', calculateTotalQuantity); 
 export { router as productRouter };
