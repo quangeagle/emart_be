@@ -55,7 +55,7 @@ const getAllShippingOrders = async (req, res) => {
 const processPayment = async (req, res) => {
   try {
     const { orderID, status } = req.body;
-    const order = await Shipping.findById(orderID).populate('orderItems.productId');
+    const order = await Shipping.findById(orderID)
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
