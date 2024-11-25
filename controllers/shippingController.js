@@ -74,16 +74,6 @@ const processPayment = async (req, res) => {
   }
 };
 
-const getShippingByUserId = async (req, res) => {
-  const { userId } = req.params; // Lấy userId từ params
 
-  try {
-    const orders = await Shipping.find({ userId });
-
-    res.status(200).json(orders);
-  } catch (error) {
-    res.status(500).json({ message: 'Failed to retrieve shipping orders for this user' });
-  }
-};
 // Export các hàm để sử dụng ở các file khác
-export { createShipping, getAllShippingOrders,processPayment,getShippingByUserId };
+export { createShipping, getAllShippingOrders,processPayment};
