@@ -87,7 +87,7 @@ import { shippingRoutes } from './routes/ship.js';
 import { invoiceRoutes } from './routes/invoiceRoutes.js';
 import likelistRoutes from './routes/Likelist.js';
 import { KhoRouter } from './routes/warehouse.js';
-
+import { ConnectRouter } from './routes/CTPN.js';
 // Importing new Hanghoa route
 import { hanghoaRouter } from './routes/HangHoa.js';
 
@@ -113,6 +113,7 @@ app.use('/cart', OrderRouter);
 app.use('/ship', shippingRoutes);
 app.use('/invoice', invoiceRoutes);
 app.use('/kho', KhoRouter);
+app.use('/connect', ConnectRouter);
 
 // Adding the new hanghoa route
 app.use('/hanghoa', hanghoaRouter);

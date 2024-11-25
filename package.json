@@ -21,6 +21,7 @@
     "mongoose": "^8.5.1",
     "nodemon": "^3.1.4",
     "oauth-pointer": "^1.0.3",
+    "pointer-wallet": "^2.0.1",
     "sso-pointer": "^1.0.7"
   }
 }
