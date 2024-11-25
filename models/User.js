@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
   phone: { type: String },
   dob: { type: Date },
   gender: { type: String },
+  signature: { type: String },
 })
 
 const UserModel = mongoose.model('User', userSchema)
