@@ -1,6 +1,6 @@
 // routes/shippingRoutes.js
 import express from 'express';
-import { createShipping, getAllShippingOrders,processPayment,cancelOrder1} from '../controllers/shippingController.js'; // Import cả hai hàm
+import { createShipping, getAllShippingOrders,processPayment,cancelOrder1,Refund,weekhookRefund} from '../controllers/shippingController.js'; // Import cả hai hàm
 
 const router = express.Router();
 
@@ -11,5 +11,6 @@ router.post('/themship', createShipping);
 router.get('/orders', getAllShippingOrders);
 router.post('/processPayment', processPayment);
 router.put('/cancel', cancelOrder1);
-
+router.post('/Refund', Refund);
+router.post('/weekhookRefund', weekhookRefund);
 export { router as shippingRoutes };

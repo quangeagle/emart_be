@@ -90,7 +90,7 @@ import { KhoRouter } from './routes/warehouse.js';
 import { ConnectRouter } from './routes/CTPN.js';
 // Importing new Hanghoa route
 import { hanghoaRouter } from './routes/HangHoa.js';
-
+import { UserRouter2 } from './routes/user_router.js';
 const app = express();
 dotenv.config();
 
@@ -114,6 +114,7 @@ app.use('/ship', shippingRoutes);
 app.use('/invoice', invoiceRoutes);
 app.use('/kho', KhoRouter);
 app.use('/connect', ConnectRouter);
+app.use('/api', UserRouter2);
 
 // Adding the new hanghoa route
 app.use('/hanghoa', hanghoaRouter);

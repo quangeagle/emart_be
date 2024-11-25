@@ -208,8 +208,76 @@ const cancelOrder1 = async (req, res) => {
     res.status(500).json({ message: 'Error canceling order', error: error.message });
   }
 };
+const Refund = async (req, res) => {
+  try {
+    const { orderID } = req.body;
 
-export { createShipping, getAllShippingOrders, processPayment,cancelOrder1 };
+    if (!orderID) {
+      return res.status(400).json({ message: "OrderID is required" });
+    }
+    const order = await Shipping.findById(orderID);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const refundResponse = await pointerPayment.refundMoney(orderID);
+
+    // Kiểm tra phản hồi từ refund API
+    if (refundResponse && refundResponse.status === 200) {
+      console.log("Refund successful:", refundResponse.data);
+      return res.status(200).json({
+        message: "Refund successful",
+        data: refundResponse.data,
+      });
+    } else {
+      console.error("Refund failed:", refundResponse);
+      return res.status(400).json({
+        message: "Refund failed",
+        response: refundResponse,
+      });
+    }
+  } catch (error) {
+    console.error("Error in Refund:", error.message);
+    res.status(500).json({ message: "Error processing refund", error: error.message });
+  }
+};
+
+
+const weekhookRefund = async (req, res) => {
+  try {
+    const { orderID, status  } = req.body;
+
+    const order = await Shipping.findById(orderID);
+    console.log(orderID)
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    if (order.status !== 'paid') {
+      return res.status(400).json({ message: "Only paid orders can be canceled with this function" });
+    }
+
+    if (status === 200) {
+      order.status = 'canceled';
+      await order.save();
+      for (const item of order.orderItems) {
+        const product = await Product.findOne({ 'versions._id': item.versionId });
+        if (product) {
+          const version = product.versions.id(item.versionId);
+          version.totalQuantity += item.quantity; 
+          await product.save();
+          console.log(`Updated quantity for product version: ${version.name}, new quantity: ${version.totalQuantity}`);
+        }
+      }
+      return res.status(200).json({ message: 'Paid order canceled successfully', order });
+    } else {
+      return res.status(400).json({ message: 'Failed to refund money', refundResponse });
+    }
+  } catch (error) {
+    console.error("Error in cancelPaidOrder:", error.message);
+    res.status(500).json({ message: 'Error canceling paid order', error: error.message });
+  }
+};
+export { createShipping, getAllShippingOrders, processPayment,cancelOrder1,Refund,weekhookRefund };
 
 
 ///////////////////////////////////////////////////////
