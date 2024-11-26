@@ -1,6 +1,6 @@
 // routes/shippingRoutes.js
 import express from 'express';
-import { createShipping, getAllShippingOrders,processPayment,getShippingByUserId } from '../controllers/shippingController.js'; // Import cả hai hàm
+import { createShipping, getAllShippingOrders,processPayment ,getShippingByUserId} from '../controllers/shippingController.js'; // Import cả hai hàm
 
 const router = express.Router();
 

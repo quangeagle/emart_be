@@ -117,6 +117,7 @@ app.use('/kho', KhoRouter);
 // Adding the new hanghoa route
 app.use('/hanghoa', hanghoaRouter);
 app.use((req, res) => {
+
   res.status(404).send('Not Found');
 });
 

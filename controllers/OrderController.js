@@ -10,29 +10,35 @@ import mongoose from 'mongoose';
 const addToCart = async (req, res) => {
   try {
     const { userId, productId, versionId, quantity } = req.body;
+    console.log(req.body);
 
     // Kiểm tra sự tồn tại của người dùng và sản phẩm
     const user = await User.findById(userId);
     const product = await Product.findById(productId);
 
-    if (!user || !product) {
-      return res.status(404).json({ message: 'Người dùng hoặc sản phẩm không tồn tại' });
+    if (!user) {
+      return res.status(404).json({ message: 'Người dùng không tồn tại' });
+    }
+    if (!product) {
+      return res.status(404).json({ message: 'Sản phẩm không tồn tại' });
     }
 
     // Kiểm tra sự tồn tại của phiên bản trong sản phẩm
-    const selectedVersion = product.versions.find(version => version._id.toString() === versionId);
+    const selectedVersion = product.versions.find(
+      (version) => version._id.toString() === versionId
+    );
+
     if (!selectedVersion) {
       return res.status(404).json({ message: 'Phiên bản không tồn tại trong sản phẩm' });
     }
 
-    // Kiểm tra số lượng sản phẩm còn lại trong phiên bản đã chọn
-    if (selectedVersion.quantity < quantity) {
-      return res.status(400).json({ message: 'Không đủ sản phẩm trong kho cho phiên bản đã chọn' });
+    // Kiểm tra số lượng tổng (totalQuantity) sản phẩm còn lại trong phiên bản
+    if (selectedVersion.totalQuantity < quantity) {
+      return res.status(400).json({
+        message: 'Không đủ sản phẩm trong kho cho phiên bản đã chọn',
+        available: selectedVersion.totalQuantity,
+      });
     }
-
-    // Giảm số lượng sản phẩm trong phiên bản
-    selectedVersion.quantity -= quantity;
-    await product.save();
 
     // Kiểm tra xem phiên bản đã có trong giỏ hàng chưa
     let existingCartItem = await Cart.findOne({ userId, productId, versionId });
@@ -41,7 +47,10 @@ const addToCart = async (req, res) => {
       // Cập nhật số lượng nếu sản phẩm đã có trong giỏ hàng
       existingCartItem.quantity += quantity;
       await existingCartItem.save();
-      return res.json({ message: 'Sản phẩm đã được cập nhật trong giỏ hàng', cartItem: existingCartItem });
+      return res.json({
+        message: 'Sản phẩm đã được cập nhật trong giỏ hàng',
+        cartItem: existingCartItem,
+      });
     }
 
     // Thêm phiên bản sản phẩm vào giỏ hàng
@@ -56,12 +65,16 @@ const addToCart = async (req, res) => {
     });
     await newCartItem.save();
 
-    res.status(201).json({ message: 'Sản phẩm đã được thêm vào giỏ hàng', cartItem: newCartItem });
+    res.status(201).json({
+      message: 'Sản phẩm đã được thêm vào giỏ hàng',
+      cartItem: newCartItem,
+    });
   } catch (error) {
     console.error('Error adding to cart:', error);
     res.status(500).json({ message: 'Có lỗi xảy ra', error });
   }
 };
+
 
 
 // Lấy giỏ hàng của người dùng
